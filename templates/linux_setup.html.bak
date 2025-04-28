@@ -44,10 +44,10 @@ GRANT ALL PRIVILEGES ON DATABASE domain_security_scanner TO domainscanner;
                     <li class="mb-2">Set environment variables:
                         <pre class="bg-light p-3 rounded"><code>
 # Set database connection string
-export DATABASE_URL="postgresql://domainscanner:domainscanner@localhost:5432/domain_security_scanner"
+export DATABASE_URL="postgresql://secops:secops@localhost:5432/domain_security_scanner"
 
 # To make it persistent, add to your ~/.bashrc or equivalent:
-echo 'export DATABASE_URL="postgresql://domainscanner:domainscanner@localhost:5432/domain_security_scanner"' >> ~/.bashrc
+echo 'export DATABASE_URL="postgresql://secops:secops@localhost:5432/domain_security_scanner"' >> ~/.bashrc
 source ~/.bashrc</code></pre>
                     </li>
                 </ol>
@@ -80,16 +80,16 @@ sudo usermod -aG docker $USER
                     <li class="mb-2">Run PostgreSQL in a container:
                         <pre class="bg-light p-3 rounded"><code>
 # Run PostgreSQL container
-docker run --name postgres-dscan -e POSTGRES_PASSWORD=domainscanner -e POSTGRES_USER=domainscanner \
+docker run --name postgres-dscan -e POSTGRES_PASSWORD=secops -e POSTGRES_USER=secops \
 -e POSTGRES_DB=domain_security_scanner -p 5432:5432 -d postgres</code></pre>
                     </li>
                     <li class="mb-2">Set environment variables:
                         <pre class="bg-light p-3 rounded"><code>
 # Set database connection string
-export DATABASE_URL="postgresql://domainscanner:domainscanner@localhost:5432/domain_security_scanner"
+export DATABASE_URL="postgresql://secops:secops@localhost:5432/domain_security_scanner"
 
 # To make it persistent, add to your ~/.bashrc or equivalent:
-echo 'export DATABASE_URL="postgresql://domainscanner:domainscanner@localhost:5432/domain_security_scanner"' >> ~/.bashrc
+echo 'export DATABASE_URL="postgresql://secops:secops@localhost:5432/domain_security_scanner"' >> ~/.bashrc
 source ~/.bashrc</code></pre>
                     </li>
                 </ol>

@@ -32,16 +32,16 @@ brew services start postgresql</code></pre>
 createdb domain_security_scanner
 
 # Create user with password
-createuser -P domainscanner
-# When prompted, enter 'domainscanner' as the password
+createuser -P secops
+# When prompted, enter 'secops' as the password
 
 # Grant privileges to the user
-psql -c "GRANT ALL PRIVILEGES ON DATABASE domain_security_scanner TO domainscanner;"</code></pre>
+psql -c "GRANT ALL PRIVILEGES ON DATABASE domain_security_scanner TO secops;"</code></pre>
                     </li>
                     <li class="mb-2">Set environment variables:
                         <pre class="bg-light p-3 rounded"><code>
 # Set database connection string
-export DATABASE_URL="postgresql://domainscanner:domainscanner@localhost:5432/domain_security_scanner"</code></pre>
+export DATABASE_URL="postgresql://secops:secops@localhost:5432/domain_security_scanner"</code></pre>
                     </li>
                 </ol>
 
@@ -51,13 +51,13 @@ export DATABASE_URL="postgresql://domainscanner:domainscanner@localhost:5432/dom
                     <li class="mb-2">Run PostgreSQL in a container:
                         <pre class="bg-light p-3 rounded"><code>
 # Run PostgreSQL container
-docker run --name postgres-dscan -e POSTGRES_PASSWORD=domainscanner -e POSTGRES_USER=domainscanner \
+docker run --name postgres-dscan -e POSTGRES_PASSWORD=secops -e POSTGRES_USER=secops \
 -e POSTGRES_DB=domain_security_scanner -p 5432:5432 -d postgres</code></pre>
                     </li>
                     <li class="mb-2">Set environment variables:
                         <pre class="bg-light p-3 rounded"><code>
 # Set database connection string
-export DATABASE_URL="postgresql://domainscanner:domainscanner@localhost:5432/domain_security_scanner"</code></pre>
+export DATABASE_URL="postgresql://secops:secops@localhost:5432/domain_security_scanner"</code></pre>
                     </li>
                 </ol>
             </div>
