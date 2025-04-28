@@ -155,8 +155,8 @@ gunicorn --bind 0.0.0.0:5000 --workers 4 main:app
                                 <ul>
                                     <li>Create a new PostgreSQL database through the Replit interface</li>
                                     <li>Add the <code>DATABASE_URL</code> environment variable in the "Secrets" tab</li>
-                                    <li>The URL format should be: <code>postgresql://domainscanner:domainscanner@hostname:port/database</code></li>
-                                    <li>Use 'domainscanner' for both username and password as shown above</li>
+                                    <li>The URL format should be: <code>postgresql://secops:secops@hostname:port/database</code></li>
+                                    <li>Use 'secops' for both username and password as shown above</li>
                                 </ul>
                             </li>
                             <li>Run the application</li>
@@ -172,16 +172,16 @@ gunicorn --bind 0.0.0.0:5000 --workers 4 main:app
 createdb domain_security_scanner
 
 # Create user with password (use these credentials)
-createuser -P domainscanner
-# When prompted, enter 'domainscanner' as the password
+createuser -P secops
+# When prompted, enter 'secops' as the password
 
 # Grant privileges to the user
-psql -c "GRANT ALL PRIVILEGES ON DATABASE domain_security_scanner TO domainscanner;"
+psql -c "GRANT ALL PRIVILEGES ON DATABASE domain_security_scanner TO secops;"
                                 </code></pre>
                             </li>
                             <li>Set the <code>DATABASE_URL</code> environment variable:
                                 <pre class="bg-light p-3 rounded"><code>
-export DATABASE_URL="postgresql://domainscanner:domainscanner@hostname:port/domain_security_scanner"
+export DATABASE_URL="postgresql://secops:secops@hostname:port/domain_security_scanner"
                                 </code></pre>
                             </li>
                             <li>On first run, the application will automatically create the necessary tables</li>
@@ -205,26 +205,26 @@ brew services start postgresql
 createdb domain_security_scanner
 
 # Create user with password
-createuser -P domainscanner
-# When prompted, enter 'domainscanner' as the password
+createuser -P secops
+# When prompted, enter 'secops' as the password
 
 # Grant privileges to the user
-psql -c "GRANT ALL PRIVILEGES ON DATABASE domain_security_scanner TO domainscanner;"
+psql -c "GRANT ALL PRIVILEGES ON DATABASE domain_security_scanner TO secops;"
                                 </code></pre>
                             </li>
                             <li>Set the environment variable for your session:
                                 <pre class="bg-light p-3 rounded"><code>
-export DATABASE_URL="postgresql://domainscanner:domainscanner@localhost:5432/domain_security_scanner"
+export DATABASE_URL="postgresql://secops:secops@localhost:5432/domain_security_scanner"
                                 </code></pre>
                             </li>
                             <li>Alternative: Use Docker if you prefer not to install PostgreSQL directly:
                                 <pre class="bg-light p-3 rounded"><code>
 # Run PostgreSQL in Docker
-docker run --name postgres-dscan -e POSTGRES_PASSWORD=domainscanner -e POSTGRES_USER=domainscanner \
+docker run --name postgres-dscan -e POSTGRES_PASSWORD=secops -e POSTGRES_USER=secops \
 -e POSTGRES_DB=domain_security_scanner -p 5432:5432 -d postgres
 
 # Set environment variable
-export DATABASE_URL="postgresql://domainscanner:domainscanner@localhost:5432/domain_security_scanner"
+export DATABASE_URL="postgresql://secops:secops@localhost:5432/domain_security_scanner"
                                 </code></pre>
                             </li>
                             <li>Run the application:
@@ -521,7 +521,7 @@ class ScheduledScan(db.Model):
                         <p>The database connection is configured using environment variables:</p>
                         <pre class="bg-light p-3 rounded"><code>
 # The application looks for the DATABASE_URL environment variable
-export DATABASE_URL="postgresql://domainscanner:domainscanner@hostname:port/database"
+export DATABASE_URL="postgresql://secops:secops@hostname:port/database"
 
 # Or when using Replit, set the DATABASE_URL in the Secrets tab
 </code></pre>
