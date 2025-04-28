@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>macOS Setup Guide - Domain Security Scanner</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container mt-4">
+        <h1>Setting up Domain Security Scanner on macOS</h1>
+        
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h2 class="h4 mb-0">Database Setup on macOS</h2>
+            </div>
+            <div class="card-body">
+                <h3>Option 1: Using Homebrew (Recommended)</h3>
+                <ol class="mb-4">
+                    <li class="mb-2">Install PostgreSQL using Homebrew:
+                        <pre class="bg-light p-3 rounded"><code>
+# Install PostgreSQL
+brew install postgresql
+
+# Start PostgreSQL service
+brew services start postgresql</code></pre>
+                    </li>
+                    <li class="mb-2">Create the database and user:
+                        <pre class="bg-light p-3 rounded"><code>
+# Create database
+createdb domain_security_scanner
+
+# Create user with password
+createuser -P secops
+# When prompted, enter 'secops' as the password
+
+# Grant privileges to the user
+psql -c "GRANT ALL PRIVILEGES ON DATABASE domain_security_scanner TO secops;"</code></pre>
+                    </li>
+                    <li class="mb-2">Set environment variables:
+                        <pre class="bg-light p-3 rounded"><code>
+# Set database connection string
+export DATABASE_URL="postgresql://secops:secops@localhost:5432/domain_security_scanner"</code></pre>
+                    </li>
+                </ol>
+
+                <h3>Option 2: Using Docker</h3>
+                <ol class="mb-4">
+                    <li class="mb-2">Install Docker from <a href="https://www.docker.com/products/docker-desktop" target="_blank">docker.com</a></li>
+                    <li class="mb-2">Run PostgreSQL in a container:
+                        <pre class="bg-light p-3 rounded"><code>
+# Run PostgreSQL container
+docker run --name postgres-dscan -e POSTGRES_PASSWORD=secops -e POSTGRES_USER=secops \
+-e POSTGRES_DB=domain_security_scanner -p 5432:5432 -d postgres</code></pre>
+                    </li>
+                    <li class="mb-2">Set environment variables:
+                        <pre class="bg-light p-3 rounded"><code>
+# Set database connection string
+export DATABASE_URL="postgresql://secops:secops@localhost:5432/domain_security_scanner"</code></pre>
+                    </li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h2 class="h4 mb-0">Running the Application</h2>
+            </div>
+            <div class="card-body">
+                <ol>
+                    <li class="mb-2">Install Python dependencies:
+                        <pre class="bg-light p-3 rounded"><code>
+# Install dependencies
+pip install -r project_requirements.txt</code></pre>
+                    </li>
+                    <li class="mb-2">Run the application:
+                        <pre class="bg-light p-3 rounded"><code>
+# Run the application
+gunicorn --bind 0.0.0.0:5000 --reuse-port --reload main:app</code></pre>
+                    </li>
+                    <li class="mb-2">Access the application at <a href="http://localhost:5000">http://localhost:5000</a></li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h2 class="h4 mb-0">Troubleshooting</h2>
+            </div>
+            <div class="card-body">
+                <ul>
+                    <li class="mb-2">If you encounter permission issues with PostgreSQL, you might need to run commands using <code>sudo -u postgres</code></li>
+                    <li class="mb-2">Make sure the DATABASE_URL environment variable is set in the terminal where you run the application</li>
+                    <li class="mb-2">For M1/M2 Mac users, you may need to install Rosetta 2 for some dependencies</li>
+                    <li class="mb-2">If you're using Docker, ensure that the Docker Desktop application is running</li>
+                    <li class="mb-2">To make the environment variable persistent, add it to your <code>~/.bash_profile</code>, <code>~/.zshrc</code>, or relevant shell configuration file</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="text-center mb-4">
+            <a href="/" class="btn btn-primary">Return to Main Page</a>
+            <a href="/documentation" class="btn btn-secondary">View Full Documentation</a>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,1160 @@
+{% extends "layout.html" %}
+
+{% block head %}
+<title>Domain Security Details - {{ domain }}</title>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-3">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/">Home</a></li>
+                    <li class="breadcrumb-item active">{{ domain }}</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    {% if data.is_error %}
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="alert alert-warning">
+                <h4 class="alert-heading"><i class="fas fa-exclamation-triangle me-2"></i>{{ data.full_report.error }}</h4>
+                <p>{{ data.full_report.message }}</p>
+                <hr>
+                <h5>Recommendations:</h5>
+                <ul>
+                    {% for recommendation in data.full_report.recommendations %}
+                    <li>{{ recommendation }}</li>
+                    {% endfor %}
+                </ul>
+                <div class="mt-3">
+                    <form action="/rescan_domain" method="post" class="d-inline">
+                        <input type="hidden" name="domain" value="{{ domain }}">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-sync-alt me-2"></i>Try Rescanning
+                        </button>
+                    </form>
+                    <a href="{{ url_for('index') }}" class="btn btn-secondary ms-2">
+                        <i class="fas fa-home me-2"></i>Return to Home
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>{{ domain }}</h1>
+            <p class="text-muted">
+                Scan time: {{ data.scan_time }}
+                <a href="{{ url_for('export_full_report', domain=domain) }}" class="btn btn-sm btn-outline-primary ms-3">
+                    <i class="fas fa-download"></i> Download Full Report
+                </a>
+            </p>
+        </div>
+        <div class="col-md-4 text-end">
+            <div class="d-flex align-items-center justify-content-end h-100">
+                <div class="me-3">
+                    <span class="d-block">Security Score</span>
+                    <h2 class="mb-0">{{ data.security_score }}/100</h2>
+                </div>
+                <div class="security-gauge security-{{ data.security_rank | lower }}">
+                    <span>{{ data.security_rank }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if not data.is_error %}
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header">
+                    <h4 class="card-title mb-0">Overview</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title text-primary">SSL Certificate</h5>
+                                    <div class="d-flex align-items-center justify-content-center">
+                                        {% if data.full_report.checks.https.ssl_valid %}
+                                        <i class="fas fa-shield-alt text-success fa-2x me-2"></i>
+                                        <span>Valid until {{ data.ssl_expiry }}</span>
+                                        {% else %}
+                                        <i class="fas fa-exclamation-triangle text-danger fa-2x me-2"></i>
+                                        <span>Invalid or Missing</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title text-primary">HTTPS</h5>
+                                    <div class="d-flex align-items-center justify-content-center">
+                                        {% if data.full_report.checks.https.enabled %}
+                                        <i class="fas fa-lock text-success fa-2x me-2"></i>
+                                        <span>Enabled</span>
+                                        {% else %}
+                                        <i class="fas fa-unlock text-danger fa-2x me-2"></i>
+                                        <span>Disabled</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title text-primary">WAF</h5>
+                                    <div class="d-flex align-items-center justify-content-center">
+                                        {% if data.full_report.checks.waf.waf_detected %}
+                                        <i class="fas fa-shield-alt text-success fa-2x me-2"></i>
+                                        <span>{{ data.full_report.checks.waf.waf_name }}</span>
+                                        {% else %}
+                                        <i class="fas fa-times-circle text-danger fa-2x me-2"></i>
+                                        <span>Not Detected</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title text-primary">DNSSEC</h5>
+                                    <div class="d-flex align-items-center justify-content-center">
+                                        {% if data.full_report.checks.dnssec.enabled %}
+                                        <i class="fas fa-check-circle text-success fa-2x me-2"></i>
+                                        <span>Enabled</span>
+                                        {% else %}
+                                        <i class="fas fa-times-circle text-danger fa-2x me-2"></i>
+                                        <span>Disabled</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header">
+                    <h4 class="card-title mb-0">Security Score Breakdown</h4>
+                </div>
+                <div class="card-body">
+                    <canvas id="scoreBreakdown"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header">
+                    <h4 class="card-title mb-0">Security Headers</h4>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Header</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for header, info in data.full_report.checks.security_headers.details.items() %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ header }}</strong>
+                                        <small class="d-block text-muted">{{ info.description }}</small>
+                                    </td>
+                                    <td>
+                                        {% if info.present %}
+                                        <span class="badge bg-success">Present</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">Missing</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <ul class="nav nav-tabs" id="securityTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="dns-tab" data-bs-toggle="tab" data-bs-target="#dns" type="button" role="tab" aria-controls="dns" aria-selected="true">DNS Records</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="https-tab" data-bs-toggle="tab" data-bs-target="#https" type="button" role="tab" aria-controls="https" aria-selected="false">HTTPS Details</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="email-tab" data-bs-toggle="tab" data-bs-target="#email" type="button" role="tab" aria-controls="email" aria-selected="false">Email Security</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="ports-tab" data-bs-toggle="tab" data-bs-target="#ports" type="button" role="tab" aria-controls="ports" aria-selected="false">Open Ports</button>
+                </li>
+
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="domain-tab" data-bs-toggle="tab" data-bs-target="#domain" type="button" role="tab" aria-controls="domain" aria-selected="false">Domain Info</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="raw-tab" data-bs-toggle="tab" data-bs-target="#raw" type="button" role="tab" aria-controls="raw" aria-selected="false">Raw Data</button>
+                </li>
+            </ul>
+            <div class="tab-content" id="securityTabsContent">
+                <div class="tab-pane fade show active p-4 border border-top-0 rounded-bottom" id="dns" role="tabpanel" aria-labelledby="dns-tab">
+                    <div class="mb-3">
+                        <h5>DNS Records</h5>
+                        <p>Score: {{ data.full_report.checks.dns_records.score }}/100</p>
+                        
+                        <!-- Record type category tabs -->
+                        <ul class="nav nav-tabs mb-3" id="dnsRecordTypeTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="basic-dns-tab" data-bs-toggle="tab" data-bs-target="#basic-dns" type="button" role="tab" aria-controls="basic-dns" aria-selected="true">Basic</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="security-dns-tab" data-bs-toggle="tab" data-bs-target="#security-dns" type="button" role="tab" aria-controls="security-dns" aria-selected="false">Security</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="mail-dns-tab" data-bs-toggle="tab" data-bs-target="#mail-dns" type="button" role="tab" aria-controls="mail-dns" aria-selected="false">Mail</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="service-dns-tab" data-bs-toggle="tab" data-bs-target="#service-dns" type="button" role="tab" aria-controls="service-dns" aria-selected="false">Service</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="advanced-dns-tab" data-bs-toggle="tab" data-bs-target="#advanced-dns" type="button" role="tab" aria-controls="advanced-dns" aria-selected="false">Advanced</button>
+                            </li>
+                        </ul>
+                        
+                        <!-- Record type content areas -->
+                        <div class="tab-content" id="dnsRecordTypeContent">
+                            <!-- Basic DNS Records -->
+                            <div class="tab-pane fade show active" id="basic-dns" role="tabpanel" aria-labelledby="basic-dns-tab">
+                                <div class="accordion" id="basicDnsAccordion">
+                                    {% for record_type in ['A', 'AAAA', 'CNAME', 'NS', 'SOA'] %}
+                                        {% set records = data.full_report.checks.dns_records.records[record_type] %}
+                                        <div class="accordion-item">
+                                            <h2 class="accordion-header" id="heading{{ record_type }}">
+                                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ record_type }}" aria-expanded="false" aria-controls="collapse{{ record_type }}">
+                                                    {{ record_type }} Records ({{ records|length }})
+                                                </button>
+                                            </h2>
+                                            <div id="collapse{{ record_type }}" class="accordion-collapse collapse" aria-labelledby="heading{{ record_type }}" data-bs-parent="#basicDnsAccordion">
+                                                <div class="accordion-body">
+                                                    {% if records|length > 0 %}
+                                                        <ul class="list-group">
+                                                            {% for record in records %}
+                                                                <li class="list-group-item">{{ record }}</li>
+                                                            {% endfor %}
+                                                        </ul>
+                                                    {% else %}
+                                                        <p class="text-muted">No records found</p>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            
+                            <!-- Security DNS Records -->
+                            <div class="tab-pane fade" id="security-dns" role="tabpanel" aria-labelledby="security-dns-tab">
+                                <div class="accordion" id="securityDnsAccordion">
+                                    {% for record_type in ['CAA', 'DNSKEY', 'DS', 'DMARC', 'SPF', 'TXT'] %}
+                                        {% set records = data.full_report.checks.dns_records.records[record_type] %}
+                                        <div class="accordion-item">
+                                            <h2 class="accordion-header" id="heading{{ record_type }}">
+                                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ record_type }}" aria-expanded="false" aria-controls="collapse{{ record_type }}">
+                                                    {{ record_type }} Records ({{ records|length }})
+                                                </button>
+                                            </h2>
+                                            <div id="collapse{{ record_type }}" class="accordion-collapse collapse" aria-labelledby="heading{{ record_type }}" data-bs-parent="#securityDnsAccordion">
+                                                <div class="accordion-body">
+                                                    {% if records|length > 0 %}
+                                                        <ul class="list-group">
+                                                            {% for record in records %}
+                                                                <li class="list-group-item">{{ record }}</li>
+                                                            {% endfor %}
+                                                        </ul>
+                                                    {% else %}
+                                                        <p class="text-muted">No records found</p>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            
+                            <!-- Mail DNS Records -->
+                            <div class="tab-pane fade" id="mail-dns" role="tabpanel" aria-labelledby="mail-dns-tab">
+                                <div class="accordion" id="mailDnsAccordion">
+                                    {% for record_type in ['MX', 'PTR', 'SPF', 'DMARC'] %}
+                                        {% set records = data.full_report.checks.dns_records.records[record_type] %}
+                                        <div class="accordion-item">
+                                            <h2 class="accordion-header" id="heading{{ record_type }}Mail">
+                                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ record_type }}Mail" aria-expanded="false" aria-controls="collapse{{ record_type }}Mail">
+                                                    {{ record_type }} Records ({{ records|length }})
+                                                </button>
+                                            </h2>
+                                            <div id="collapse{{ record_type }}Mail" class="accordion-collapse collapse" aria-labelledby="heading{{ record_type }}Mail" data-bs-parent="#mailDnsAccordion">
+                                                <div class="accordion-body">
+                                                    {% if records|length > 0 %}
+                                                        <ul class="list-group">
+                                                            {% for record in records %}
+                                                                <li class="list-group-item">{{ record }}</li>
+                                                            {% endfor %}
+                                                        </ul>
+                                                    {% else %}
+                                                        <p class="text-muted">No records found</p>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            
+                            <!-- Service DNS Records -->
+                            <div class="tab-pane fade" id="service-dns" role="tabpanel" aria-labelledby="service-dns-tab">
+                                <div class="accordion" id="serviceDnsAccordion">
+                                    {% for record_type in ['SRV', 'NAPTR', 'CNAME'] %}
+                                        {% set records = data.full_report.checks.dns_records.records[record_type] %}
+                                        <div class="accordion-item">
+                                            <h2 class="accordion-header" id="heading{{ record_type }}Service">
+                                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ record_type }}Service" aria-expanded="false" aria-controls="collapse{{ record_type }}Service">
+                                                    {{ record_type }} Records ({{ records|length }})
+                                                </button>
+                                            </h2>
+                                            <div id="collapse{{ record_type }}Service" class="accordion-collapse collapse" aria-labelledby="heading{{ record_type }}Service" data-bs-parent="#serviceDnsAccordion">
+                                                <div class="accordion-body">
+                                                    {% if records|length > 0 %}
+                                                        <ul class="list-group">
+                                                            {% for record in records %}
+                                                                <li class="list-group-item">{{ record }}</li>
+                                                            {% endfor %}
+                                                        </ul>
+                                                    {% else %}
+                                                        <p class="text-muted">No records found</p>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            
+                            <!-- Advanced DNS Records -->
+                            <div class="tab-pane fade" id="advanced-dns" role="tabpanel" aria-labelledby="advanced-dns-tab">
+                                <div class="accordion" id="advancedDnsAccordion">
+                                    {% for record_type in ['CERT', 'HINFO', 'LOC', 'RP'] %}
+                                        {% set records = data.full_report.checks.dns_records.records[record_type] %}
+                                        <div class="accordion-item">
+                                            <h2 class="accordion-header" id="heading{{ record_type }}Advanced">
+                                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ record_type }}Advanced" aria-expanded="false" aria-controls="collapse{{ record_type }}Advanced">
+                                                    {{ record_type }} Records ({{ records|length }})
+                                                </button>
+                                            </h2>
+                                            <div id="collapse{{ record_type }}Advanced" class="accordion-collapse collapse" aria-labelledby="heading{{ record_type }}Advanced" data-bs-parent="#advancedDnsAccordion">
+                                                <div class="accordion-body">
+                                                    {% if records|length > 0 %}
+                                                        <ul class="list-group">
+                                                            {% for record in records %}
+                                                                <li class="list-group-item">{{ record }}</li>
+                                                            {% endfor %}
+                                                        </ul>
+                                                    {% else %}
+                                                        <p class="text-muted">No records found</p>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h5>DNSSEC</h5>
+                        <p>Score: {{ data.full_report.checks.dnssec.score }}/100</p>
+                        
+                        <div class="card">
+                            <div class="card-body">
+                                <dl class="row mb-0">
+                                    <dt class="col-sm-3">DNSSEC Enabled</dt>
+                                    <dd class="col-sm-9">
+                                        {% if data.full_report.checks.dnssec.enabled %}
+                                            <span class="badge bg-success">Yes</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">No</span>
+                                        {% endif %}
+                                    </dd>
+                                    
+                                    <dt class="col-sm-3">Validation</dt>
+                                    <dd class="col-sm-9">
+                                        {% if data.full_report.checks.dnssec.validated %}
+                                            <span class="badge bg-success">Successful</span>
+                                        {% else %}
+                                            <span class="badge bg-warning text-dark">Not Validated</span>
+                                        {% endif %}
+                                    </dd>
+                                    
+                                    {% for key, value in data.full_report.checks.dnssec.details.items() %}
+                                    <dt class="col-sm-3">{{ key|replace('_', ' ')|title }}</dt>
+                                    <dd class="col-sm-9">{{ value }}</dd>
+                                    {% endfor %}
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tab-pane fade p-4 border border-top-0 rounded-bottom" id="https" role="tabpanel" aria-labelledby="https-tab">
+                    <h5>HTTPS & SSL/TLS</h5>
+                    <p>Score: {{ data.full_report.checks.https.score }}/100</p>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card mb-3">
+                                <div class="card-header">HTTPS Implementation</div>
+                                <div class="card-body">
+                                    <dl class="row mb-0">
+                                        <dt class="col-sm-6">HTTPS Enabled</dt>
+                                        <dd class="col-sm-6">
+                                            {% if data.full_report.checks.https.enabled %}
+                                                <span class="badge bg-success">Yes</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">No</span>
+                                            {% endif %}
+                                        </dd>
+                                        
+                                        <dt class="col-sm-6">HTTP to HTTPS Redirect</dt>
+                                        <dd class="col-sm-6">
+                                            {% if data.full_report.checks.https.redirect_to_https %}
+                                                <span class="badge bg-success">Yes</span>
+                                                {% if data.full_report.checks.https.details.redirect_check %}
+                                                    <small class="d-block text-muted mt-1">Status: {{ data.full_report.checks.https.details.redirect_check.status }}</small>
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="badge bg-danger">No</span>
+                                                {% if data.full_report.checks.https.details.redirect_check and data.full_report.checks.https.details.redirect_check.status %}
+                                                    <small class="d-block text-muted mt-1">Status: {{ data.full_report.checks.https.details.redirect_check.status }}</small>
+                                                {% endif %}
+                                            {% endif %}
+                                        </dd>
+                                        
+                                        <dt class="col-sm-6">HSTS</dt>
+                                        <dd class="col-sm-6">
+                                            {% if data.full_report.checks.https.hsts %}
+                                                <span class="badge bg-success">Yes</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">No</span>
+                                            {% endif %}
+                                        </dd>
+                                        
+                                        {% if data.full_report.checks.https.details.tls_version %}
+                                        <dt class="col-sm-6">TLS Version</dt>
+                                        <dd class="col-sm-6">{{ data.full_report.checks.https.details.tls_version }}</dd>
+                                        {% endif %}
+                                    </dl>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="card mb-3">
+                                <div class="card-header">SSL Certificate</div>
+                                <div class="card-body">
+                                    <dl class="row mb-0">
+                                        <dt class="col-sm-6">Certificate Valid</dt>
+                                        <dd class="col-sm-6">
+                                            {% if data.full_report.checks.https.ssl_valid %}
+                                                <span class="badge bg-success">Yes</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">No</span>
+                                            {% endif %}
+                                        </dd>
+                                        
+                                        {% if data.ssl_expiry %}
+                                        <dt class="col-sm-6">Expiry Date</dt>
+                                        <dd class="col-sm-6">
+                                            <!-- Direct inline check using number comparison -->
+                                            {% if data.full_report.checks.https.details.ssl_days_remaining|default(999)|int < 90 %}
+                                                <div id="debug-info" class="small text-muted mb-2">
+                                                    Days remaining: {{ data.full_report.checks.https.details.ssl_days_remaining|default('unknown') }}
+                                                    <script>console.log("SSL days remaining: {{ data.full_report.checks.https.details.ssl_days_remaining|default('unknown') }}");</script>
+                                                </div>
+                                                <span style="color: red; font-weight: bold;">{{ data.ssl_expiry }}</span>
+                                                <span class="badge bg-danger ms-2">Expiring in {{ data.full_report.checks.https.details.ssl_days_remaining }} days</span>
+                                            {% else %}
+                                                {{ data.ssl_expiry }}
+                                            {% endif %}
+                                        </dd>
+                                        {% endif %}
+                                        
+                                        {% if data.full_report.checks.https.details.ssl_days_remaining is defined %}
+                                        <dt class="col-sm-6">Days Remaining</dt>
+                                        <dd class="col-sm-6">
+                                            {% if data.full_report.checks.https.details.ssl_days_remaining < 90 %}
+                                                <span class="text-danger">{{ data.full_report.checks.https.details.ssl_days_remaining }}</span>
+                                                {% if data.full_report.checks.https.details.ssl_days_remaining < 30 %}
+                                                    <span class="badge bg-warning text-dark">Expiring Soon</span>
+                                                {% else %}
+                                                    <span class="badge bg-danger">Expiring in < 90 days</span>
+                                                {% endif %}
+                                            {% else %}
+                                                {{ data.full_report.checks.https.details.ssl_days_remaining }}
+                                            {% endif %}
+                                        </dd>
+                                        {% endif %}
+                                        
+                                        {% if data.full_report.checks.https.details.ssl_subject %}
+                                        <dt class="col-sm-6">Subject</dt>
+                                        <dd class="col-sm-6">
+                                            {% for key, value in data.full_report.checks.https.details.ssl_subject.items() %}
+                                            <div><small>{{ key }}: {{ value }}</small></div>
+                                            {% endfor %}
+                                        </dd>
+                                        {% endif %}
+                                        
+                                        {% if data.full_report.checks.https.details.ssl_issuer %}
+                                        <dt class="col-sm-6">Issuer</dt>
+                                        <dd class="col-sm-6">
+                                            {% for key, value in data.full_report.checks.https.details.ssl_issuer.items() %}
+                                            <div><small>{{ key }}: {{ value }}</small></div>
+                                            {% endfor %}
+                                        </dd>
+                                        {% endif %}
+                                    </dl>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- SSL Vulnerability Section -->
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <div class="card mb-3">
+                                <div class="card-header bg-primary text-white">
+                                    <h5 class="card-title mb-0">SSL/TLS Vulnerabilities</h5>
+                                </div>
+                                <div class="card-body">
+                                    {% if data.full_report.checks.https.details.vulnerabilities and data.full_report.checks.https.details.vulnerabilities|length > 0 %}
+                                        <div class="alert alert-danger">
+                                            <strong>Vulnerabilities Detected!</strong> The domain has {{ data.full_report.checks.https.details.vulnerabilities|length }} SSL/TLS vulnerabilities.
+                                        </div>
+                                        <ul class="list-group">
+                                            {% for vuln in data.full_report.checks.https.details.vulnerabilities %}
+                                                <li class="list-group-item text-danger">
+                                                    <i class="fas fa-exclamation-triangle me-2"></i> {{ vuln }}
+                                                </li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% else %}
+                                        <div class="alert alert-success">
+                                            <i class="fas fa-shield-alt me-2"></i> No SSL/TLS vulnerabilities detected.
+                                        </div>
+                                    {% endif %}
+                                    
+                                    <!-- POODLE Specific Check -->
+                                    {% if data.full_report.checks.https.details.poodle_vulnerable is defined %}
+                                        <div class="mt-3">
+                                            <h6>POODLE Vulnerability</h6>
+                                            {% if data.full_report.checks.https.details.poodle_vulnerable %}
+                                                <div class="alert alert-danger">
+                                                    <i class="fas fa-bug me-2"></i> Vulnerable to POODLE attack (SSLv3 enabled)
+                                                </div>
+                                            {% else %}
+                                                <div class="alert alert-success">
+                                                    <i class="fas fa-shield-alt me-2"></i> Not vulnerable to POODLE attack
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    {% endif %}
+                                    
+                                    <!-- Heartbleed Specific Check -->
+                                    {% if data.full_report.checks.https.details.heartbleed_vulnerable is defined %}
+                                        <div class="mt-3">
+                                            <h6>Heartbleed Vulnerability</h6>
+                                            {% if data.full_report.checks.https.details.heartbleed_vulnerable %}
+                                                <div class="alert alert-danger">
+                                                    <i class="fas fa-bug me-2"></i> Vulnerable to Heartbleed attack
+                                                </div>
+                                            {% else %}
+                                                <div class="alert alert-success">
+                                                    <i class="fas fa-shield-alt me-2"></i> Not vulnerable to Heartbleed attack
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="card mb-3">
+                                <div class="card-header bg-primary text-white">
+                                    <h5 class="card-title mb-0">SSL/TLS Protocols</h5>
+                                </div>
+                                <div class="card-body">
+                                    <h6>Enabled Protocols</h6>
+                                    {% if data.full_report.checks.https.details.enabled_protocols and data.full_report.checks.https.details.enabled_protocols|length > 0 %}
+                                        <ul class="list-group mb-3">
+                                            {% for protocol in data.full_report.checks.https.details.enabled_protocols %}
+                                                {% if protocol in ['SSLv2', 'SSLv3'] %}
+                                                    <li class="list-group-item list-group-item-danger">
+                                                        <i class="fas fa-times-circle me-2"></i> {{ protocol }} (Insecure)
+                                                    </li>
+                                                {% elif protocol in ['TLSv1.0', 'TLSv1.1'] %}
+                                                    <li class="list-group-item list-group-item-warning">
+                                                        <i class="fas fa-exclamation-triangle me-2"></i> {{ protocol }} (Outdated)
+                                                    </li>
+                                                {% else %}
+                                                    <li class="list-group-item list-group-item-success">
+                                                        <i class="fas fa-check-circle me-2"></i> {{ protocol }} (Secure)
+                                                    </li>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </ul>
+                                    {% else %}
+                                        <p class="text-muted">No protocol information available</p>
+                                    {% endif %}
+                                    
+                                    <h6>Disabled Protocols</h6>
+                                    {% if data.full_report.checks.https.details.disabled_protocols and data.full_report.checks.https.details.disabled_protocols|length > 0 %}
+                                        <ul class="list-group">
+                                            {% for protocol in data.full_report.checks.https.details.disabled_protocols %}
+                                                {% if protocol in ['SSLv2', 'SSLv3'] %}
+                                                    <li class="list-group-item list-group-item-success">
+                                                        <i class="fas fa-check-circle me-2"></i> {{ protocol }} (Good - Insecure protocol disabled)
+                                                    </li>
+                                                {% elif protocol in ['TLSv1.0', 'TLSv1.1'] %}
+                                                    <li class="list-group-item list-group-item-success">
+                                                        <i class="fas fa-check-circle me-2"></i> {{ protocol }} (Good - Outdated protocol disabled)
+                                                    </li>
+                                                {% else %}
+                                                    <li class="list-group-item list-group-item-warning">
+                                                        <i class="fas fa-exclamation-triangle me-2"></i> {{ protocol }} (Modern protocol disabled)
+                                                    </li>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </ul>
+                                    {% else %}
+                                        <p class="text-muted">No protocol information available</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Cipher Suites Section -->
+                    <div class="row mt-4">
+                        <div class="col-md-12">
+                            <div class="card mb-3">
+                                <div class="card-header bg-primary text-white">
+                                    <h5 class="card-title mb-0">SSL/TLS Cipher Suites</h5>
+                                </div>
+                                <div class="card-body">
+                                    {% if data.full_report.checks.https.details.cipher_suites and data.full_report.checks.https.details.cipher_suites|length > 0 %}
+                                        <div class="table-responsive">
+                                            <table class="table table-sm table-striped">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Protocol</th>
+                                                        <th>Cipher</th>
+                                                        <th>Strength</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for cipher in data.full_report.checks.https.details.cipher_suites %}
+                                                        <tr>
+                                                            <td>{{ cipher.protocol }}</td>
+                                                            <td>{{ cipher.cipher }}</td>
+                                                            <td>
+                                                                {% if 'weak' in cipher.strength|lower %}
+                                                                    <span class="badge bg-danger">{{ cipher.strength }}</span>
+                                                                {% elif 'strong' in cipher.strength|lower or 'secure' in cipher.strength|lower %}
+                                                                    <span class="badge bg-success">{{ cipher.strength }}</span>
+                                                                {% else %}
+                                                                    <span class="badge bg-secondary">{{ cipher.strength }}</span>
+                                                                {% endif %}
+                                                            </td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    {% else %}
+                                        <p class="text-muted">No cipher suite information available</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if data.full_report.checks.https.details.ssl_alt_names %}
+                    <div class="card mb-3">
+                        <div class="card-header">Alternative Subject Names</div>
+                        <div class="card-body">
+                            <ul class="list-group">
+                                {% for name in data.full_report.checks.https.details.ssl_alt_names %}
+                                <li class="list-group-item">{{ name }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="tab-pane fade p-4 border border-top-0 rounded-bottom" id="email" role="tabpanel" aria-labelledby="email-tab">
+                    <h5>Email Security Analysis</h5>
+                    <p>Score: {{ data.full_report.checks.email_security.score }}/100</p>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">Email Security Summary</div>
+                                <div class="card-body">
+                                    <dl class="row mb-0">
+                                        <dt class="col-sm-6">SPF Record</dt>
+                                        <dd class="col-sm-6">
+                                            {% if data.full_report.checks.email_security.details.spf.present %}
+                                                <span class="badge bg-success">Present</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">Missing</span>
+                                            {% endif %}
+                                        </dd>
+                                        
+                                        <dt class="col-sm-6">DKIM Record</dt>
+                                        <dd class="col-sm-6">
+                                            {% if data.full_report.checks.email_security.details.dkim.present %}
+                                                <span class="badge bg-success">Present</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">Missing</span>
+                                            {% endif %}
+                                        </dd>
+                                        
+                                        <dt class="col-sm-6">DMARC Record</dt>
+                                        <dd class="col-sm-6">
+                                            {% if data.full_report.checks.email_security.details.dmarc.present %}
+                                                <span class="badge bg-success">Present</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">Missing</span>
+                                            {% endif %}
+                                        </dd>
+
+                                        <dt class="col-sm-6">MX Records</dt>
+                                        <dd class="col-sm-6">
+                                            {% if data.full_report.checks.email_security.details.mx.present %}
+                                                <span class="badge bg-success">Found</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">Missing</span>
+                                            {% endif %}
+                                        </dd>
+                                    </dl>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">Security Recommendations</div>
+                                <div class="card-body">
+                                    {% if data.full_report.checks.email_security.recommendations|length > 0 %}
+                                    <ul class="list-group">
+                                        {% for recommendation in data.full_report.checks.email_security.recommendations %}
+                                        <li class="list-group-item">{{ recommendation }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                    {% else %}
+                                    <p class="text-muted">No recommendations</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- SPF Records -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="card-title mb-0">SPF Records - Raw Dig Output</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if data.full_report.checks.email_security.details.spf.raw_dig %}
+                                <pre class="bg-light p-3 rounded">{{ data.full_report.checks.email_security.details.spf.raw_dig }}</pre>
+                                
+                                {% if data.full_report.checks.email_security.details.spf.present %}
+                                <div class="alert alert-success mt-3">
+                                    <h6>Detected SPF Records:</h6>
+                                    <ul>
+                                    {% for record in data.full_report.checks.email_security.details.spf.records %}
+                                        <li>{{ record }}</li>
+                                    {% endfor %}
+                                    </ul>
+                                </div>
+                                {% else %}
+                                <div class="alert alert-warning mt-3">
+                                    <h6>No SPF Records Detected</h6>
+                                    <p>The dig command did not find any SPF records for this domain.</p>
+                                </div>
+                                {% endif %}
+                            {% else %}
+                                <div class="alert alert-danger">Error running dig command or no output received.</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- DKIM Records -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="card-title mb-0">DKIM Records - Raw Dig Output</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if data.full_report.checks.email_security.details.dkim.raw_dig %}
+                                <div class="accordion" id="dkimAccordion">
+                                    {% for selector, output in data.full_report.checks.email_security.details.dkim.raw_dig.items() %}
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header" id="heading{{ selector }}">
+                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ selector }}" aria-expanded="false" aria-controls="collapse{{ selector }}">
+                                                Selector: {{ selector }}
+                                            </button>
+                                        </h2>
+                                        <div id="collapse{{ selector }}" class="accordion-collapse collapse" aria-labelledby="heading{{ selector }}" data-bs-parent="#dkimAccordion">
+                                            <div class="accordion-body">
+                                                <pre class="bg-light p-3 rounded">{{ output }}</pre>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="alert alert-danger">Error running dig command or no output received.</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- DMARC Records -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="card-title mb-0">DMARC Records - Raw Dig Output</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if data.full_report.checks.email_security.details.dmarc.raw_dig %}
+                                <pre class="bg-light p-3 rounded">{{ data.full_report.checks.email_security.details.dmarc.raw_dig }}</pre>
+                                
+                                {% if data.full_report.checks.email_security.details.dmarc.present %}
+                                <div class="alert alert-success mt-3">
+                                    <h6>Detected DMARC Records:</h6>
+                                    <ul>
+                                    {% for record in data.full_report.checks.email_security.details.dmarc.records %}
+                                        <li>{{ record }}</li>
+                                    {% endfor %}
+                                    </ul>
+                                </div>
+                                {% else %}
+                                <div class="alert alert-warning mt-3">
+                                    <h6>No DMARC Records Detected</h6>
+                                    <p>The dig command did not find any DMARC records for this domain.</p>
+                                </div>
+                                {% endif %}
+                            {% else %}
+                                <div class="alert alert-danger">Error running dig command or no output received.</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- MX Records -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="card-title mb-0">MX Records - Raw Dig Output</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if data.full_report.checks.email_security.details.mx.raw_dig %}
+                                <pre class="bg-light p-3 rounded">{{ data.full_report.checks.email_security.details.mx.raw_dig }}</pre>
+                                
+                                {% if data.full_report.checks.email_security.details.mx.present %}
+                                <div class="alert alert-success mt-3">
+                                    <h6>Detected MX Records:</h6>
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Priority</th>
+                                                <th>Mail Server</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for record in data.full_report.checks.email_security.details.mx.records %}
+                                            <tr>
+                                                <td>{{ record[0] }}</td>
+                                                <td>{{ record[1] }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                {% else %}
+                                <div class="alert alert-warning mt-3">
+                                    <h6>No MX Records Detected</h6>
+                                    <p>The dig command did not find any MX records for this domain.</p>
+                                </div>
+                                {% endif %}
+                            {% else %}
+                                <div class="alert alert-danger">Error running dig command or no output received.</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tab-pane fade p-4 border border-top-0 rounded-bottom" id="ports" role="tabpanel" aria-labelledby="ports-tab">
+                    <h5>Open Ports Analysis</h5>
+                    <p>Score: {{ data.full_report.checks.open_ports.score }}/100</p>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">Open Ports Summary</div>
+                                <div class="card-body">
+                                    <dl class="row mb-0">
+                                        <dt class="col-sm-6">IP Address</dt>
+                                        <dd class="col-sm-6">{{ data.full_report.checks.open_ports.details.ip_address|default('Not resolved') }}</dd>
+                                        
+                                        <dt class="col-sm-6">Open Ports Count</dt>
+                                        <dd class="col-sm-6">
+                                            {{ data.full_report.checks.open_ports.details.open_ports_count|default(0) }}
+                                            {% if data.full_report.checks.open_ports.details.open_ports_count > 5 %}
+                                                <span class="badge bg-warning text-dark">High</span>
+                                            {% endif %}
+                                        </dd>
+                                        
+                                        {% if data.full_report.checks.open_ports.details.open_risky_ports is defined and data.full_report.checks.open_ports.details.open_risky_ports|length > 0 %}
+                                        <dt class="col-sm-6">Risky Ports</dt>
+                                        <dd class="col-sm-6">
+                                            <span class="badge bg-danger">{{ data.full_report.checks.open_ports.details.open_risky_ports|length }} Detected</span>
+                                        </dd>
+                                        {% endif %}
+                                    </dl>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">Security Recommendations</div>
+                                <div class="card-body">
+                                    {% if data.full_report.checks.open_ports.recommendations|length > 0 %}
+                                    <ul class="list-group">
+                                        {% for recommendation in data.full_report.checks.open_ports.recommendations %}
+                                        <li class="list-group-item">{{ recommendation }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                    {% else %}
+                                    <p class="text-muted">No recommendations</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">Detected Open Ports</div>
+                        <div class="card-body">
+                            {% if data.full_report.checks.open_ports.details.open_ports|default([])|length > 0 %}
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Port</th>
+                                            <th>Service</th>
+                                            <th>Protocol</th>
+                                            <th>Risk</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for port in data.full_report.checks.open_ports.details.open_ports %}
+                                        <tr>
+                                            <td>{{ port.port }}</td>
+                                            <td>{{ port.service }}</td>
+                                            <td>{{ port.protocol|default('tcp') }}</td>
+                                            <td>
+                                                {% if port.port in data.full_report.checks.open_ports.details.open_risky_ports|default([]) %}
+                                                <span class="badge bg-danger">High</span>
+                                                {% elif port.port == 80 %}
+                                                <span class="badge bg-warning text-dark">Medium</span>
+                                                {% else %}
+                                                <span class="badge bg-success">Low</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <p class="text-muted">No open ports detected</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tab-pane fade p-4 border border-top-0 rounded-bottom" id="domain" role="tabpanel" aria-labelledby="domain-tab">
+                    <h5>Domain Information</h5>
+                    <p>Score: {{ data.full_report.checks.domain_info.score }}/100</p>
+                    
+                    <div class="card">
+                        <div class="card-body">
+                            <dl class="row mb-0">
+                                {% if data.full_report.checks.domain_info.details.domain_age_days is defined %}
+                                <dt class="col-sm-3">Domain Age</dt>
+                                <dd class="col-sm-9">{{ data.full_report.checks.domain_info.details.domain_age_days }} days</dd>
+                                {% endif %}
+                                
+                                {% if data.full_report.checks.domain_info.details.days_until_expiry is defined %}
+                                <dt class="col-sm-3">Days Until Expiry</dt>
+                                <dd class="col-sm-9">
+                                    {{ data.full_report.checks.domain_info.details.days_until_expiry }} days
+                                    {% if data.full_report.checks.domain_info.details.days_until_expiry < 90 %}
+                                    <span class="badge bg-warning text-dark">Expiring Soon</span>
+                                    {% endif %}
+                                </dd>
+                                {% endif %}
+                                
+                                {% if data.full_report.checks.domain_info.details.registrar %}
+                                <dt class="col-sm-3">Registrar</dt>
+                                <dd class="col-sm-9">{{ data.full_report.checks.domain_info.details.registrar }}</dd>
+                                {% endif %}
+                                
+                                {% if data.full_report.checks.domain_info.details.creation_date %}
+                                <dt class="col-sm-3">Creation Date</dt>
+                                <dd class="col-sm-9">{{ data.full_report.checks.domain_info.details.creation_date }}</dd>
+                                {% endif %}
+                                
+                                {% if data.full_report.checks.domain_info.details.expiration_date %}
+                                <dt class="col-sm-3">Expiration Date</dt>
+                                <dd class="col-sm-9">{{ data.full_report.checks.domain_info.details.expiration_date }}</dd>
+                                {% endif %}
+                                
+                                {% if data.full_report.checks.domain_info.details.updated_date %}
+                                <dt class="col-sm-3">Updated Date</dt>
+                                <dd class="col-sm-9">{{ data.full_report.checks.domain_info.details.updated_date }}</dd>
+                                {% endif %}
+                                
+                                {% if data.full_report.checks.domain_info.details.privacy_protection is defined %}
+                                <dt class="col-sm-3">Privacy Protection</dt>
+                                <dd class="col-sm-9">
+                                    {% if data.full_report.checks.domain_info.details.privacy_protection %}
+                                    <span class="badge bg-success">Enabled</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">Disabled</span>
+                                    {% endif %}
+                                </dd>
+                                {% endif %}
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tab-pane fade p-4 border border-top-0 rounded-bottom" id="raw" role="tabpanel" aria-labelledby="raw-tab">
+                    <h5>Raw Security Data</h5>
+                    <p>The complete security check results in JSON format.</p>
+                    
+                    <div class="card">
+                        <div class="card-body">
+                            <pre id="rawJson" class="bg-light p-3 rounded" style="max-height: 400px; overflow: auto;">{{ data.full_report|tojson(indent=2) }}</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    {% if not data.is_error %}
+    // Extract security scores from result data
+    const securityData = {{ data.full_report|tojson }};
+    const scores = {};
+    
+    if (securityData && securityData.checks) {
+        for (const checkType in securityData.checks) {
+            if (securityData.checks[checkType].score !== undefined) {
+                scores[checkType] = securityData.checks[checkType].score;
+            }
+        }
+    }
+    // Create radar chart for score breakdown
+    const radarCtx = document.getElementById('scoreBreakdown');
+    if (radarCtx && !{{ data.is_error|tojson }}) {
+        const scoreBreakdown = new Chart(radarCtx.getContext('2d'), {
+            type: 'radar',
+            data: {
+                labels: [
+                    'Security Headers', 
+                    'DNS Records', 
+                    'DNSSEC', 
+                    'HTTPS', 
+                    'WAF', 
+                    'Domain Info',
+                    'Open Ports',
+                    'Email Security'
+                ],
+                datasets: [{
+                    label: 'Security Score',
+                    data: [
+                        scores.security_headers || 0,
+                        scores.dns_records || 0,
+                        scores.dnssec || 0,
+                        scores.https || 0,
+                        scores.waf || 0,
+                        scores.domain_info || 0,
+                        scores.open_ports || 0,
+                        scores.email_security || 0
+                    ],
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    pointBackgroundColor: 'rgba(54, 162, 235, 1)',
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: 'rgba(54, 162, 235, 1)'
+                }]
+            },
+            options: {
+                scales: {
+                    r: {
+                        angleLines: {
+                            display: true
+                        },
+                        suggestedMin: 0,
+                        suggestedMax: 100
+                    }
+                }
+            }
+        });
+    }
+    {% endif %}
+});
+</script>
+{% endblock %}

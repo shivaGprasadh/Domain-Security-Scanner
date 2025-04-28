@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linux Setup Guide - Domain Security Scanner</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container mt-4">
+        <h1>Setting up Domain Security Scanner on Linux</h1>
+        
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h2 class="h4 mb-0">Database Setup on Linux</h2>
+            </div>
+            <div class="card-body">
+                <h3>Option 1: Using Package Manager (Recommended)</h3>
+                <ol class="mb-4">
+                    <li class="mb-2">Install PostgreSQL using your distribution's package manager:
+                        <pre class="bg-light p-3 rounded"><code>
+# For Debian/Ubuntu
+sudo apt update
+sudo apt install postgresql postgresql-contrib
+
+# For Red Hat/CentOS/Fedora
+sudo dnf install postgresql-server postgresql-contrib
+sudo postgresql-setup --initdb
+sudo systemctl enable postgresql
+sudo systemctl start postgresql</code></pre>
+                    </li>
+                    <li class="mb-2">Create the database and user:
+                        <pre class="bg-light p-3 rounded"><code>
+# Switch to postgres user
+sudo -u postgres psql
+
+# In the PostgreSQL prompt, run:
+CREATE DATABASE domain_security_scanner;
+CREATE USER secops WITH PASSWORD 'secops';
+GRANT ALL PRIVILEGES ON DATABASE domain_security_scanner TO secops;
+\q</code></pre>
+                    </li>
+                    <li class="mb-2">Set environment variables:
+                        <pre class="bg-light p-3 rounded"><code>
+# Set database connection string
+export DATABASE_URL="postgresql://secops:secops@localhost:5432/domain_security_scanner"
+
+# To make it persistent, add to your ~/.bashrc or equivalent:
+echo 'export DATABASE_URL="postgresql://secops:secops@localhost:5432/domain_security_scanner"' >> ~/.bashrc
+source ~/.bashrc</code></pre>
+                    </li>
+                </ol>
+
+                <h3>Option 2: Using Docker</h3>
+                <ol class="mb-4">
+                    <li class="mb-2">Install Docker:
+                        <pre class="bg-light p-3 rounded"><code>
+# For Debian/Ubuntu
+sudo apt update
+sudo apt install apt-transport-https ca-certificates curl software-properties-common
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+sudo apt update
+sudo apt install docker-ce
+
+# For Red Hat/CentOS/Fedora
+sudo dnf install dnf-plugins-core
+sudo dnf config-manager --add-repo https://download.docker.com/linux/fedora/docker-ce.repo
+sudo dnf install docker-ce docker-ce-cli containerd.io
+
+# Start and enable Docker
+sudo systemctl start docker
+sudo systemctl enable docker
+
+# Add your user to the docker group (to run docker without sudo)
+sudo usermod -aG docker $USER
+# Log out and log back in for this to take effect</code></pre>
+                    </li>
+                    <li class="mb-2">Run PostgreSQL in a container:
+                        <pre class="bg-light p-3 rounded"><code>
+# Run PostgreSQL container
+docker run --name postgres-dscan -e POSTGRES_PASSWORD=secops -e POSTGRES_USER=secops \
+-e POSTGRES_DB=domain_security_scanner -p 5432:5432 -d postgres</code></pre>
+                    </li>
+                    <li class="mb-2">Set environment variables:
+                        <pre class="bg-light p-3 rounded"><code>
+# Set database connection string
+export DATABASE_URL="postgresql://secops:secops@localhost:5432/domain_security_scanner"
+
+# To make it persistent, add to your ~/.bashrc or equivalent:
+echo 'export DATABASE_URL="postgresql://secops:secops@localhost:5432/domain_security_scanner"' >> ~/.bashrc
+source ~/.bashrc</code></pre>
+                    </li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h2 class="h4 mb-0">Installing Dependencies</h2>
+            </div>
+            <div class="card-body">
+                <ol>
+                    <li class="mb-2">Install system dependencies:
+                        <pre class="bg-light p-3 rounded"><code>
+# For Debian/Ubuntu
+sudo apt update
+sudo apt install python3 python3-pip python3-venv nmap openssl libpq-dev python3-dev build-essential
+
+# For Red Hat/CentOS/Fedora
+sudo dnf install python3 python3-pip python3-devel nmap openssl postgresql-devel gcc</code></pre>
+                    </li>
+                    <li class="mb-2">Set up a virtual environment (recommended):
+                        <pre class="bg-light p-3 rounded"><code>
+# Create virtual environment
+python3 -m venv venv
+
+# Activate virtual environment
+source venv/bin/activate</code></pre>
+                    </li>
+                    <li class="mb-2">Install Python dependencies:
+                        <pre class="bg-light p-3 rounded"><code>
+# Install dependencies
+pip install -r project_requirements.txt</code></pre>
+                    </li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h2 class="h4 mb-0">Running the Application</h2>
+            </div>
+            <div class="card-body">
+                <ol>
+                    <li class="mb-2">Run the application:
+                        <pre class="bg-light p-3 rounded"><code>
+# Make sure the virtual environment is activated
+source venv/bin/activate
+
+# Run the application
+gunicorn --bind 0.0.0.0:5000 --reuse-port --reload main:app</code></pre>
+                    </li>
+                    <li class="mb-2">Access the application at <a href="http://localhost:5000">http://localhost:5000</a></li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h2 class="h4 mb-0">Troubleshooting</h2>
+            </div>
+            <div class="card-body">
+                <ul>
+                    <li class="mb-2">If PostgreSQL is not accepting connections, check the pg_hba.conf file to ensure it allows local connections:
+                        <pre class="bg-light p-3 rounded"><code>
+# Location of pg_hba.conf varies by distribution:
+# Debian/Ubuntu: /etc/postgresql/{version}/main/pg_hba.conf
+# RHEL/CentOS/Fedora: /var/lib/pgsql/data/pg_hba.conf
+
+# Add the following line to allow local connections:
+host    all             all             127.0.0.1/32            md5
+
+# Restart PostgreSQL service:
+sudo systemctl restart postgresql</code></pre>
+                    </li>
+                    <li class="mb-2">Make sure the DATABASE_URL environment variable is set in the terminal where you run the application</li>
+                    <li class="mb-2">If you're using Docker and encounter permission issues, ensure your user is in the docker group</li>
+                    <li class="mb-2">For packages that need compilation, ensure you have the necessary development headers installed</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="text-center mb-4">
+            <a href="/" class="btn btn-primary">Return to Main Page</a>
+            <a href="/documentation" class="btn btn-secondary">View Full Documentation</a>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

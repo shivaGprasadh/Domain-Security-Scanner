@@ -1,0 +1,847 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-md-3">
+            <!-- Documentation navigation -->
+            <div class="list-group sticky-top pt-3">
+                <a href="#overview" class="list-group-item list-group-item-action">Overview</a>
+                <a href="#installation" class="list-group-item list-group-item-action">Installation</a>
+                <a href="#deployment" class="list-group-item list-group-item-action">Deployment</a>
+                <a href="#dependencies" class="list-group-item list-group-item-action">Dependencies</a>
+                <a href="#scoring-system" class="list-group-item list-group-item-action">Scoring System</a>
+                <a href="#data-management" class="list-group-item list-group-item-action">Data Management</a>
+                <a href="#code-structure" class="list-group-item list-group-item-action">Code Structure</a>
+                <a href="#security-checks" class="list-group-item list-group-item-action">Security Checks</a>
+                <a href="#api-endpoints" class="list-group-item list-group-item-action">API Endpoints</a>
+                <a href="#future-enhancements" class="list-group-item list-group-item-action">Future Enhancements</a>
+            </div>
+        </div>
+        
+        <div class="col-md-9">
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h1 class="mb-4">Domain Security Scanner Documentation</h1>
+                    
+                    <section id="overview" class="mb-5">
+                        <h2>Overview</h2>
+                        <p>The Domain Security Scanner is a web application designed to evaluate the security posture of domains and subdomains. It focuses on analyzing experience.com domains but can be extended to scan any domain.</p>
+                        <p>The application performs comprehensive security checks including:</p>
+                        <ul>
+                            <li>DNS record analysis (A, AAAA, CNAME, MX, NS, PTR, SOA, TXT, SRV, CAA, NAPTR, CERT, DNSKEY, DS, HINFO, LOC, SPF, RP)</li>
+                            <li>Security headers verification</li>
+                            <li>DNSSEC implementation status</li>
+                            <li>HTTPS implementation and TLS/SSL security</li>
+                            <li>Email security configurations (SPF, DKIM, DMARC)</li>
+                            <li>Open ports scanning and service identification</li>
+                            <li>Domain registration information</li>
+                        </ul>
+                        <p>Based on these checks, domains are assigned a security score (0-100) and ranking (A+ to E) to indicate their overall security level.</p>
+                    </section>
+                    
+                    <section id="installation" class="mb-5">
+                        <h2>Installation</h2>
+                        <p>Follow these steps to install the Domain Security Scanner locally:</p>
+                        
+                        <h4>Prerequisites</h4>
+                        <ul>
+                            <li>Python 3.9+ installed</li>
+                            <li>pip (Python package manager)</li>
+                            <li>git (optional, for cloning the repository)</li>
+                            <li>nmap installed on your system (for open ports scanning)</li>
+                        </ul>
+                        
+                        <h4>macOS Installation</h4>
+                        <p>For macOS, follow these specific steps:</p>
+                        <pre class="bg-light p-3 rounded"><code>
+# Install Homebrew if not already installed
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+# Install Python 3 (if not already installed)
+brew install python3
+
+# Install nmap
+brew install nmap
+
+# Install dnspython dependencies
+brew install openssl
+
+# Clone the repository (or download and extract the ZIP file)
+git clone https://github.com/yourusername/domain-security-scanner.git
+cd domain-security-scanner
+
+# Create and activate a virtual environment
+python3 -m venv venv
+source venv/bin/activate
+
+# Install required packages
+# Copy project_requirements.txt to requirements.txt first
+cp project_requirements.txt requirements.txt
+pip install -r requirements.txt
+
+# If pyOpenSSL installation fails, you might need to explicitly set openssl paths
+# export LDFLAGS="-L/usr/local/opt/openssl@1.1/lib"
+# export CPPFLAGS="-I/usr/local/opt/openssl@1.1/include"
+# pip install pyOpenSSL
+                        </code></pre>
+                        
+                        <h4>General Installation (Windows/Linux)</h4>
+                        <pre class="bg-light p-3 rounded"><code>
+# Clone the repository (or download and extract the ZIP file)
+git clone https://github.com/yourusername/domain-security-scanner.git
+cd domain-security-scanner
+
+# Create and activate a virtual environment (recommended)
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install required packages
+# Copy project_requirements.txt to requirements.txt first
+cp project_requirements.txt requirements.txt
+pip install -r requirements.txt
+                        </code></pre>
+                        
+                        <h4>Configuration</h4>
+                        <p>The application requires minimal configuration:</p>
+                        <ol>
+                            <li>Create a <code>domains.txt</code> file in the root directory and add domains to scan (one per line)</li>
+                            <li>Set environment variables (optional):
+                                <ul>
+                                    <li><code>SESSION_SECRET</code>: Secret key for session management (defaults to "default_secret_key" if not set)</li>
+                                    <li><code>DEBUG</code>: Set to "True" for debug mode (defaults to True)</li>
+                                </ul>
+                            </li>
+                        </ol>
+                        
+                        <h4>macOS-Specific Notes</h4>
+                        <ul>
+                            <li>If you encounter permission issues when running nmap, you may need to run the application with sudo or configure nmap for non-root usage</li>
+                            <li>If DNS resolution is slow, consider configuring your macOS DNS settings or using an alternative DNS resolver</li>
+                            <li>On M1/M2 Macs, ensure you're using the correct architecture-specific versions of Python and dependencies</li>
+                        </ul>
+                    </section>
+                    
+                    <section id="deployment" class="mb-5">
+                        <h2>Deployment</h2>
+                        <p>The application can be deployed in various environments:</p>
+                        
+                        <h4>Running Locally</h4>
+                        <pre class="bg-light p-3 rounded"><code>
+# Start the development server
+python main.py
+
+# The application will be available at http://localhost:5000
+                        </code></pre>
+                        
+                        <h4>Production Deployment</h4>
+                        <p>For production deployment, it's recommended to use Gunicorn with a reverse proxy like Nginx:</p>
+                        <pre class="bg-light p-3 rounded"><code>
+# Install production dependencies
+pip install gunicorn
+
+# Run with Gunicorn
+gunicorn --bind 0.0.0.0:5000 --workers 4 main:app
+                        </code></pre>
+                        
+                        <h4>Deployment on Replit</h4>
+                        <p>The application is designed to run smoothly on Replit:</p>
+                        <ol>
+                            <li>Create a new Repl and import the code</li>
+                            <li>Set up the necessary packages in the .replit file</li>
+                            <li>Configure the run command to use <code>gunicorn --bind 0.0.0.0:5000 main:app</code></li>
+                            <li>Create a <code>domains.txt</code> file with domains to scan</li>
+                            <li>Set up PostgreSQL database (using the "Secrets" tab in Replit):
+                                <ul>
+                                    <li>Create a new PostgreSQL database through the Replit interface</li>
+                                    <li>Add the <code>DATABASE_URL</code> environment variable in the "Secrets" tab</li>
+                                    <li>The URL format should be: <code>postgresql://secops:secops@hostname:port/database</code></li>
+                                    <li>Use 'secops' for both username and password as shown above</li>
+                                </ul>
+                            </li>
+                            <li>Run the application</li>
+                        </ol>
+                        
+                        <h4>Database Setup for Production Deployment</h4>
+                        <p>For production deployments, configure a PostgreSQL database:</p>
+                        <ol>
+                            <li>Install PostgreSQL on your server or use a cloud database service</li>
+                            <li>Create a new database and user:
+                                <pre class="bg-light p-3 rounded"><code>
+# Create database
+createdb domain_security_scanner
+
+# Create user with password (use these credentials)
+createuser -P secops
+# When prompted, enter 'secops' as the password
+
+# Grant privileges to the user
+psql -c "GRANT ALL PRIVILEGES ON DATABASE domain_security_scanner TO secops;"
+                                </code></pre>
+                            </li>
+                            <li>Set the <code>DATABASE_URL</code> environment variable:
+                                <pre class="bg-light p-3 rounded"><code>
+export DATABASE_URL="postgresql://secops:secops@hostname:port/domain_security_scanner"
+                                </code></pre>
+                            </li>
+                            <li>On first run, the application will automatically create the necessary tables</li>
+                        </ol>
+                        
+                        <h4>Database Setup on macOS</h4>
+                        <p>To run the application on macOS, follow these steps to set up PostgreSQL:</p>
+                        <ol>
+                            <li>Install PostgreSQL using Homebrew:
+                                <pre class="bg-light p-3 rounded"><code>
+# Install PostgreSQL
+brew install postgresql
+
+# Start PostgreSQL service
+brew services start postgresql
+                                </code></pre>
+                            </li>
+                            <li>Create the database and user:
+                                <pre class="bg-light p-3 rounded"><code>
+# Create database
+createdb domain_security_scanner
+
+# Create user with password
+createuser -P secops
+# When prompted, enter 'secops' as the password
+
+# Grant privileges to the user
+psql -c "GRANT ALL PRIVILEGES ON DATABASE domain_security_scanner TO secops;"
+                                </code></pre>
+                            </li>
+                            <li>Set the environment variable for your session:
+                                <pre class="bg-light p-3 rounded"><code>
+export DATABASE_URL="postgresql://secops:secops@localhost:5432/domain_security_scanner"
+                                </code></pre>
+                            </li>
+                            <li>Alternative: Use Docker if you prefer not to install PostgreSQL directly:
+                                <pre class="bg-light p-3 rounded"><code>
+# Run PostgreSQL in Docker
+docker run --name postgres-dscan -e POSTGRES_PASSWORD=secops -e POSTGRES_USER=secops \
+-e POSTGRES_DB=domain_security_scanner -p 5432:5432 -d postgres
+
+# Set environment variable
+export DATABASE_URL="postgresql://secops:secops@localhost:5432/domain_security_scanner"
+                                </code></pre>
+                            </li>
+                            <li>Run the application:
+                                <pre class="bg-light p-3 rounded"><code>
+# Install dependencies
+pip install -r project_requirements.txt
+
+# Run the application
+gunicorn --bind 0.0.0.0:5000 --reuse-port --reload main:app
+
+# Access at http://localhost:5000
+                                </code></pre>
+                            </li>
+                        </ol>
+                        <p>Common issues on macOS:</p>
+                        <ul>
+                            <li>If you have permission issues with PostgreSQL, you might need to run commands using <code>sudo -u postgres</code></li>
+                            <li>Make sure the DATABASE_URL environment variable is set in the terminal where you run the application</li>
+                            <li>The first time you run the app, it will automatically create the necessary tables in the database</li>
+                        </ul>
+                    </section>
+                    
+                    <section id="dependencies" class="mb-5">
+                        <h2>Dependencies</h2>
+                        <p>The Domain Security Scanner relies on the following main dependencies:</p>
+
+                        <h4>Complete Python Module List</h4>
+                        <div class="alert alert-info mb-3">
+                            <p class="mb-2"><strong>Required Python Modules:</strong></p>
+                            <pre class="mb-0"><code>dnspython
+email-validator
+flask
+flask-sqlalchemy
+gunicorn
+psycopg2-binary
+pyopenssl
+python-whois
+requests
+sslyze
+trafilatura</code></pre>
+                        </div>
+
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Package</th>
+                                    <th>Version</th>
+                                    <th>Purpose</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Flask</td>
+                                    <td>2.3.3</td>
+                                    <td>Web framework for building the application</td>
+                                </tr>
+                                <tr>
+                                    <td>Werkzeug</td>
+                                    <td>2.3.7</td>
+                                    <td>WSGI utility library used by Flask</td>
+                                </tr>
+                                <tr>
+                                    <td>flask-sqlalchemy</td>
+                                    <td>3.1.1</td>
+                                    <td>SQLAlchemy integration for Flask (database ORM)</td>
+                                </tr>
+                                <tr>
+                                    <td>sqlalchemy</td>
+                                    <td>2.0.25</td>
+                                    <td>Python SQL toolkit and ORM</td>
+                                </tr>
+                                <tr>
+                                    <td>psycopg2-binary</td>
+                                    <td>2.9.9</td>
+                                    <td>PostgreSQL database adapter for Python</td>
+                                </tr>
+                                <tr>
+                                    <td>dnspython</td>
+                                    <td>2.4.2</td>
+                                    <td>DNS toolkit for Python, used for DNS record checks</td>
+                                </tr>
+                                <tr>
+                                    <td>requests</td>
+                                    <td>2.31.0</td>
+                                    <td>HTTP library for making API requests</td>
+                                </tr>
+                                <tr>
+                                    <td>python-whois</td>
+                                    <td>0.8.0</td>
+                                    <td>WHOIS lookup library for domain registration information</td>
+                                </tr>
+                                <tr>
+                                    <td>pyOpenSSL</td>
+                                    <td>23.2.0</td>
+                                    <td>Python wrapper around OpenSSL for SSL certificate analysis</td>
+                                </tr>
+                                <tr>
+                                    <td>gunicorn</td>
+                                    <td>21.2.0</td>
+                                    <td>WSGI HTTP server for running the application in production</td>
+                                </tr>
+                                <tr>
+                                    <td>email-validator</td>
+                                    <td>2.0.0</td>
+                                    <td>Email validation library used for verifying email server configurations</td>
+                                </tr>
+                                <tr>
+                                    <td>sslyze</td>
+                                    <td>5.2.0</td>
+                                    <td>SSL/TLS server security scanner for comprehensive SSL analysis</td>
+                                </tr>
+                                <tr>
+                                    <td>trafilatura</td>
+                                    <td>1.6.4</td>
+                                    <td>Web scraping tool for extracting text content from websites</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <p>Additional system dependencies:</p>
+                        <ul>
+                            <li>nmap: Network scanning utility for open ports detection and SSL/TLS vulnerability scanning</li>
+                            <li>openssl: Used for SSL/TLS protocol and cipher verification</li>
+                        </ul>
+                        
+                        <h4>Installation Command</h4>
+                        <div class="alert alert-secondary">
+                            <p>You can install all required Python packages using:</p>
+                            <pre class="mb-0"><code>pip install dnspython email-validator flask flask-sqlalchemy gunicorn psycopg2-binary pyopenssl python-whois requests sslyze trafilatura</code></pre>
+                        </div>
+                        
+                        <h4>SSL/TLS Vulnerability Detection</h4>
+                        <p>The application uses multiple methods to detect SSL/TLS vulnerabilities:</p>
+                        <ol>
+                            <li><strong>Nmap with Security Scripts:</strong>
+                                <ul>
+                                    <li>ssl-enum-ciphers: Detects supported cipher suites</li>
+                                    <li>ssl-heartbleed: Checks for the Heartbleed vulnerability</li>
+                                    <li>ssl-poodle: Checks for POODLE vulnerability</li>
+                                    <li>ssl-ccs-injection: Checks for CCS Injection vulnerability</li>
+                                </ul>
+                            </li>
+                            <li><strong>Direct SSL Testing:</strong>
+                                <ul>
+                                    <li>Python's built-in SSL library for certificate validation</li>
+                                    <li>OpenSSL commands for protocol verification</li>
+                                    <li>Direct connection attempts to identify configuration issues</li>
+                                </ul>
+                            </li>
+                            <li><strong>Protocol/Cipher Analysis:</strong>
+                                <ul>
+                                    <li>Detection of insecure protocols (SSLv2, SSLv3, TLSv1.0)</li>
+                                    <li>Identification of weak cipher suites</li>
+                                    <li>Analysis of key exchange methods and encryption algorithms</li>
+                                </ul>
+                            </li>
+                        </ol>
+                    </section>
+                    
+                    <section id="scoring-system" class="mb-5">
+                        <h2>Scoring System</h2>
+                        <p>The security scoring system uses a composite approach, calculating scores for various security aspects:</p>
+                        
+                        <h4>Overall Score Calculation</h4>
+                        <p>The overall security score is a weighted average of individual security checks, normalized to a 0-100 scale. The calculation involves these steps:</p>
+                        <ol>
+                            <li>Each security check (DNS, HTTPS, headers, etc.) has its own score (0-100)</li>
+                            <li>Weighted scores are combined based on security significance</li>
+                            <li>Final score ranges from 0 (poor) to 100 (excellent)</li>
+                        </ol>
+                        
+                        <h4>Score to Rank Mapping</h4>
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Security Score</th>
+                                    <th>Security Rank</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>95-100</td>
+                                    <td>A+</td>
+                                    <td>Excellent security implementation</td>
+                                </tr>
+                                <tr>
+                                    <td>90-94</td>
+                                    <td>A</td>
+                                    <td>Very good security practices</td>
+                                </tr>
+                                <tr>
+                                    <td>85-89</td>
+                                    <td>B+</td>
+                                    <td>Good security with minor improvements needed</td>
+                                </tr>
+                                <tr>
+                                    <td>80-84</td>
+                                    <td>B</td>
+                                    <td>Above average security</td>
+                                </tr>
+                                <tr>
+                                    <td>70-79</td>
+                                    <td>C</td>
+                                    <td>Average security, improvements recommended</td>
+                                </tr>
+                                <tr>
+                                    <td>50-69</td>
+                                    <td>D</td>
+                                    <td>Below average security, needs attention</td>
+                                </tr>
+                                <tr>
+                                    <td>0-49</td>
+                                    <td>E</td>
+                                    <td>Poor security, urgent improvements required</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        
+                        <h4>Individual Check Scoring</h4>
+                        <p>Various security aspects contribute differently to the overall score:</p>
+                        <ul>
+                            <li><strong>DNS Records (100 points max):</strong> Points assigned based on the presence of security-focused records like CAA (20 pts), SPF (25 pts), DMARC (25 pts), etc.</li>
+                            <li><strong>DNSSEC (100 points max):</strong> 50 points for DNSKEY records, 25 points for DS records, 25 points for successful DNSSEC validation</li>
+                            <li><strong>HTTPS (100 points max):</strong> 30 points for working HTTPS, 20 points for HTTP to HTTPS redirection, 15 points for HSTS, 20 points for valid certificate, 15 points for certificate lifespan</li>
+                            <li><strong>Security Headers (100 points max):</strong> Points distributed among crucial headers like Content-Security-Policy, X-Frame-Options, etc.</li>
+                            <li><strong>Email Security (100 points max):</strong> Points for proper SPF, DKIM, DMARC implementation, and MX record hygiene</li>
+                            <li><strong>Open Ports (100 points max):</strong> Deductions for unnecessary open ports or insecure services</li>
+                        </ul>
+                    </section>
+                    
+                    <section id="data-management" class="mb-5">
+                        <h2>Data Management</h2>
+                        <p>The Domain Security Scanner uses a simple data management approach:</p>
+                        
+                        <h4>Storage Method</h4>
+                        <p>The application uses PostgreSQL database for persistent storage of scan results:</p>
+                        <ul>
+                            <li>Domain information is stored in the <code>domain</code> table</li>
+                            <li>Scan results are stored in the <code>scan_result</code> table</li>
+                            <li>Scheduled scan information is stored in the <code>scheduled_scan</code> table</li>
+                            <li>Domain names are also backed up to the <code>domains.txt</code> file</li>
+                        </ul>
+                        
+                        <h4>Data Export</h4>
+                        <p>The application provides several options for exporting data:</p>
+                        <ul>
+                            <li><strong>CSV Export</strong>: Export all domain scan results as a CSV file through the <code>/export/csv</code> endpoint</li>
+                            <li><strong>JSON Report</strong>: Download the full security report for a specific domain as a JSON file through the <code>/export/report/&lt;domain&gt;</code> endpoint</li>
+                            <li><strong>API Access</strong>: Access scan results programmatically using the API endpoints</li>
+                        </ul>
+                        <p>The "Download Full Report" button on each domain's detail page provides an easy way to export the complete security analysis in JSON format for further processing or analysis.</p>
+                        
+                        <h4>Database Schema</h4>
+                        <p>The application uses SQLAlchemy with the following database models:</p>
+                        <pre class="bg-light p-3 rounded"><code>
+# Domain Table
+class Domain(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255), unique=True, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    
+    scan_results = db.relationship('ScanResult', backref='domain', lazy=True)
+
+# Scan Result Table
+class ScanResult(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    domain_id = db.Column(db.Integer, db.ForeignKey('domain.id'), nullable=False)
+    security_score = db.Column(db.Integer, default=0)
+    security_rank = db.Column(db.String(5), default='E')
+    ssl_expiry = db.Column(db.String(50), nullable=True)
+    ssl_days_remaining = db.Column(db.Integer, nullable=True)
+    scan_time = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    full_report = db.Column(db.Text, nullable=True)  # JSON data stored as text
+
+# Scheduled Scan Table
+class ScheduledScan(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    last_full_scan = db.Column(db.DateTime, nullable=True)
+    next_scheduled_scan = db.Column(db.DateTime, nullable=True)
+</code></pre>
+                        
+                        <h4>Data Lifecycle</h4>
+                        <p>Understanding the data flow in the application:</p>
+                        <ol>
+                            <li>Application start: The <code>domain</code> table and <code>domains.txt</code> file are read to get domains to scan</li>
+                            <li>Initial scan: New domains are scanned and results stored in the database</li>
+                            <li>User operations: Users can add custom domains, rescan domains, or upload subdomain lists</li>
+                            <li>Application restart: All data is preserved in the database; no need to rescan domains</li>
+                            <li>Scheduled scans: Automatically run at 6am, 12pm, 6pm, and 12am</li>
+                        </ol>
+                        
+                        <h4>Database Configuration</h4>
+                        <p>The database connection is configured using environment variables:</p>
+                        <pre class="bg-light p-3 rounded"><code>
+# The application looks for the DATABASE_URL environment variable
+export DATABASE_URL="postgresql://secops:secops@hostname:port/database"
+
+# Or when using Replit, set the DATABASE_URL in the Secrets tab
+</code></pre>
+                        <p>On first run, the application will automatically create the necessary tables.</p>
+                            <li>This would allow tracking security changes over time and generating trend reports</li>
+                        </ul>
+                    </section>
+                    
+                    <section id="code-structure" class="mb-5">
+                        <h2>Code Structure</h2>
+                        <p>The application follows a modular structure:</p>
+                        
+                        <h4>Main Components</h4>
+                        <ul>
+                            <li><code>main.py</code>: Entry point that imports and runs the Flask application</li>
+                            <li><code>app.py</code>: Core Flask application with routes and request handling logic</li>
+                            <li><code>utils/</code>: Directory containing utility modules:
+                                <ul>
+                                    <li><code>security_checker.py</code>: Implements security scanning functionality</li>
+                                    <li><code>subdomain_scanner.py</code>: Handles finding subdomains of a given domain</li>
+                                </ul>
+                            </li>
+                            <li><code>templates/</code>: HTML templates using Jinja2 templating engine:
+                                <ul>
+                                    <li><code>layout.html</code>: Base template with common page elements</li>
+                                    <li><code>index.html</code>: Main page displaying scan results</li>
+                                    <li><code>detail.html</code>: Detailed view of security checks for a specific domain</li>
+                                    <li><code>documentation.html</code>: This documentation page</li>
+                                </ul>
+                            </li>
+                            <li><code>static/</code>: Static assets:
+                                <ul>
+                                    <li><code>css/style.css</code>: Custom styles for the application</li>
+                                    <li><code>js/</code>: JavaScript files for client-side functionality:
+                                        <ul>
+                                            <li><code>pagination.js</code>: Handles domain list pagination and sorting</li>
+                                            <li><code>detail.js</code>: Scripts for the domain detail page</li>
+                                            <li><code>main.js</code>: General application JavaScript</li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+                        
+                        <h4>Control Flow</h4>
+                        <p>When a request is made to the application:</p>
+                        <ol>
+                            <li>The request is received by the Flask application in <code>app.py</code></li>
+                            <li>Based on the route, the appropriate view function is executed</li>
+                            <li>For security scans, the utility functions in <code>security_checker.py</code> are called</li>
+                            <li>Results are stored in the <code>scan_results</code> dictionary</li>
+                            <li>The appropriate template is rendered with the results</li>
+                        </ol>
+                    </section>
+                    
+                    <section id="security-checks" class="mb-5">
+                        <h2>Security Checks</h2>
+                        <p>The application performs these key security checks:</p>
+                        
+                        <h4>DNS Records Check</h4>
+                        <p>Examines DNS records for security configurations:</p>
+                        <ul>
+                            <li>Comprehensive record type checking (A, AAAA, CNAME, MX, NS, PTR, SOA, TXT, SRV, CAA, NAPTR, CERT, DNSKEY, DS, HINFO, LOC, SPF, RP)</li>
+                            <li>Special focus on security-relevant records (CAA, SPF, DMARC)</li>
+                            <li>MX record validation for email server configuration</li>
+                        </ul>
+                        
+                        <h4>DNSSEC Check</h4>
+                        <p>Verifies DNSSEC implementation:</p>
+                        <ul>
+                            <li>Checking for DNSKEY records</li>
+                            <li>Verification of DS records in the parent zone</li>
+                            <li>Testing DNSSEC validation with authenticated data flag</li>
+                        </ul>
+                        
+                        <h4>HTTPS and SSL/TLS Security Check</h4>
+                        <p>Analyzes HTTPS implementation and comprehensive SSL/TLS security:</p>
+                        <ul>
+                            <li>HTTP to HTTPS redirection</li>
+                            <li>HSTS header presence</li>
+                            <li>SSL certificate validation</li>
+                            <li>Certificate expiration monitoring (highlighting certificates expiring in &lt;90 days)</li>
+                            <li>Certificate subject and issuer verification</li>
+                            <li>Certificate domain matching</li>
+                            <li>SSL/TLS protocol security (detection of insecure protocols like SSLv2, SSLv3)</li>
+                            <li>Cipher suite analysis and strength evaluation</li>
+                            <li>Vulnerability scanning for known SSL/TLS vulnerabilities:</li>
+                            <ul>
+                                <li>POODLE vulnerability detection</li>
+                                <li>Heartbleed vulnerability detection</li>
+                                <li>CCS Injection vulnerability detection</li>
+                            </ul>
+                        </ul>
+                        
+                        <h4>Security Headers Check</h4>
+                        <p>Evaluates HTTP security headers:</p>
+                        <ul>
+                            <li>Content-Security-Policy</li>
+                            <li>X-Frame-Options</li>
+                            <li>X-Content-Type-Options</li>
+                            <li>X-XSS-Protection</li>
+                            <li>Referrer-Policy</li>
+                            <li>Feature-Policy/Permissions-Policy</li>
+                        </ul>
+                        
+                        <h4>Email Security Check</h4>
+                        <p>Assesses email security configurations:</p>
+                        <ul>
+                            <li>SPF record validation</li>
+                            <li>DKIM configuration</li>
+                            <li>DMARC policy verification</li>
+                            <li>MX record analysis</li>
+                        </ul>
+                        
+                        <h4>Open Ports Check</h4>
+                        <p>Scans for open ports and services using nmap:</p>
+                        <ul>
+                            <li>Common port scanning</li>
+                            <li>Service identification</li>
+                            <li>Detection of potentially risky open ports</li>
+                        </ul>
+                        
+                        <h4>Domain Information Check</h4>
+                        <p>Gathers domain registration information:</p>
+                        <ul>
+                            <li>Registration date</li>
+                            <li>Expiration date</li>
+                            <li>Registrar information</li>
+                            <li>Domain age calculation</li>
+                        </ul>
+                    </section>
+                    
+                    <section id="api-endpoints" class="mb-5">
+                        <h2>API Endpoints</h2>
+                        <p>The application provides these primary endpoints:</p>
+                        
+                        <h4>Web Interface Endpoints</h4>
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Endpoint</th>
+                                    <th>Method</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>/</code></td>
+                                    <td>GET</td>
+                                    <td>Main page with domain security overview</td>
+                                </tr>
+                                <tr>
+                                    <td><code>/detail/&lt;domain&gt;</code></td>
+                                    <td>GET</td>
+                                    <td>Detailed security information for a specific domain</td>
+                                </tr>
+                                <tr>
+                                    <td><code>/scan</code></td>
+                                    <td>POST</td>
+                                    <td>Initiates scan of subdomains for experience.com</td>
+                                </tr>
+                                <tr>
+                                    <td><code>/scan_all</code></td>
+                                    <td>POST</td>
+                                    <td>Rescans all domains in domains.txt file</td>
+                                </tr>
+                                <tr>
+                                    <td><code>/sync_domains</code></td>
+                                    <td>POST</td>
+                                    <td>Syncs and scans domains from domains.txt that aren't in current results</td>
+                                </tr>
+                                <tr>
+                                    <td><code>/scan_custom</code></td>
+                                    <td>POST</td>
+                                    <td>Scans a custom subdomain provided by user</td>
+                                </tr>
+                                <tr>
+                                    <td><code>/upload_subdomains</code></td>
+                                    <td>POST</td>
+                                    <td>Processes an uploaded file of subdomains for scanning</td>
+                                </tr>
+                                <tr>
+                                    <td><code>/rescan_domain</code></td>
+                                    <td>POST</td>
+                                    <td>Rescans a specific domain</td>
+                                </tr>
+                                <tr>
+                                    <td><code>/documentation</code></td>
+                                    <td>GET</td>
+                                    <td>Displays this documentation page</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        
+                        <h4>API Data Endpoints</h4>
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Endpoint</th>
+                                    <th>Method</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>/api/domains</code></td>
+                                    <td>GET</td>
+                                    <td>Returns JSON data for all scanned domains</td>
+                                </tr>
+                                <tr>
+                                    <td><code>/api/domain/&lt;domain&gt;</code></td>
+                                    <td>GET</td>
+                                    <td>Returns detailed JSON data for a specific domain</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        
+                        <h4>Export/Download Endpoints</h4>
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Endpoint</th>
+                                    <th>Method</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>/export/csv</code></td>
+                                    <td>GET</td>
+                                    <td>Downloads all domain scan results as CSV file</td>
+                                </tr>
+                                <tr>
+                                    <td><code>/export/report/&lt;domain&gt;</code></td>
+                                    <td>GET</td>
+                                    <td>Downloads full security report for a specific domain as JSON file</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </section>
+                    
+                    <section id="future-enhancements" class="mb-5">
+                        <h2>Future Enhancements</h2>
+                        <p>Potential improvements for future versions:</p>
+                        
+                        <h4>Functionality Enhancements</h4>
+                        <ul>
+                            <li>Database integration for persistent storage of scan results</li>
+                            <li>Historical tracking of security changes over time</li>
+                            <li>Scheduled automatic rescanning of domains</li>
+                            <li>Email notifications for security issues or expiring certificates</li>
+                            <li>Expanded security checks for web application vulnerabilities</li>
+                            <li>Integration with external security tools and APIs</li>
+                            <li>User authentication and multi-user support</li>
+                            <li>Custom security policy configuration</li>
+                            <li>Additional export formats (PDF reports, Excel spreadsheets)</li>
+                        </ul>
+                        
+                        <h4>Technical Improvements</h4>
+                        <ul>
+                            <li>Asynchronous scanning for improved performance</li>
+                            <li>Background task queue for long-running scans</li>
+                            <li>API rate limiting and authentication</li>
+                            <li>Improved error handling and fallback mechanisms</li>
+                            <li>Unit and integration testing suite</li>
+                            <li>Docker containerization for easier deployment</li>
+                            <li>Configuration management improvements</li>
+                        </ul>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Auto-update active state of sidebar based on scroll position
+    document.addEventListener('DOMContentLoaded', function() {
+        const sections = document.querySelectorAll('section[id]');
+        const navLinks = document.querySelectorAll('.list-group-item');
+        
+        function highlightNavOnScroll() {
+            let scrollPosition = window.scrollY + 100;
+            
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.offsetHeight;
+                const sectionId = section.getAttribute('id');
+                
+                if (scrollPosition >= sectionTop && scrollPosition < sectionTop + sectionHeight) {
+                    navLinks.forEach(link => {
+                        link.classList.remove('active');
+                        if (link.getAttribute('href') === '#' + sectionId) {
+                            link.classList.add('active');
+                        }
+                    });
+                }
+            });
+        }
+        
+        // Smooth scrolling for navigation links
+        navLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                const targetId = this.getAttribute('href');
+                const targetElement = document.querySelector(targetId);
+                
+                window.scrollTo({
+                    top: targetElement.offsetTop - 20,
+                    behavior: 'smooth'
+                });
+            });
+        });
+        
+        window.addEventListener('scroll', highlightNavOnScroll);
+        // Initial call to set active state on page load
+        highlightNavOnScroll();
+    });
+</script>
+{% endblock %}

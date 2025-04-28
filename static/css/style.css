@@ -1,0 +1,192 @@
+/* General Styles */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+    color: #212529;
+}
+
+.container {
+    margin-top: 20px;
+    margin-bottom: 40px;
+}
+
+/* Security Badge Styles */
+.security-badge {
+    display: inline-block;
+    width: 36px;
+    height: 36px;
+    line-height: 36px;
+    font-weight: bold;
+    border-radius: 50%;
+    text-align: center;
+    color: white;
+}
+
+.security-a\+ {
+    background-color: #28a745;
+}
+
+.security-a {
+    background-color: #34ce57;
+}
+
+.security-b\+ {
+    background-color: #4BB543;
+}
+
+.security-b {
+    background-color: #6CC551;
+}
+
+.security-c {
+    background-color: #FFD700;
+    color: #212529;
+}
+
+.security-d {
+    background-color: #FFA500;
+    color: #212529;
+}
+
+.security-e {
+    background-color: #dc3545;
+}
+
+/* Security Gauge */
+.security-gauge {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.6rem;
+    font-weight: bold;
+    color: white;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Domains Table */
+.domains-table th, .domains-table td {
+    vertical-align: middle;
+}
+
+.domain-name {
+    font-weight: 500;
+    font-family: monospace;
+}
+
+/* Cards and Tabs */
+.card {
+    border: none;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border-radius: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.card-header {
+    background-color: #fff;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+    padding: 1rem;
+}
+
+.nav-tabs .nav-link {
+    border: none;
+    border-bottom: 3px solid transparent;
+    color: #495057;
+    padding: 0.75rem 1rem;
+    font-weight: 500;
+}
+
+.nav-tabs .nav-link.active {
+    border-bottom: 3px solid #007bff;
+    color: #007bff;
+}
+
+.tab-content {
+    background-color: #fff;
+    margin-bottom: 2rem;
+}
+
+/* Footer */
+.footer {
+    background-color: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+    padding: 1.5rem 0;
+    margin-top: 2rem;
+}
+
+/* Documentation Styles */
+.list-group-item.active {
+    background-color: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+.list-group-item {
+    border-radius: 0;
+    border-left: 3px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.list-group-item:hover {
+    background-color: #f8f9fa;
+    border-left: 3px solid #007bff;
+}
+
+.sticky-top {
+    top: 20px;
+}
+
+section {
+    scroll-margin-top: 20px;
+}
+
+section h2 {
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #f0f0f0;
+    color: #343a40;
+}
+
+section h4 {
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+    color: #495057;
+}
+
+code {
+    color: #e83e8c;
+    background-color: #f8f9fa;
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.25rem;
+}
+
+pre code {
+    color: #212529;
+    background-color: transparent;
+    padding: 0;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .security-gauge {
+        width: 60px;
+        height: 60px;
+        font-size: 1.4rem;
+    }
+    
+    h1 {
+        font-size: 1.8rem;
+    }
+    
+    .card-title {
+        font-size: 1.2rem;
+    }
+    
+    .list-group.sticky-top {
+        position: relative;
+        top: 0;
+        margin-bottom: 2rem;
+    }
+}

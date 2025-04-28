@@ -1,0 +1,8 @@
+experience.com
+www.experience.com
+api.qa.experience.com
+api.uat.experience.com
+outlook.com
+api.experience.com
+blog.experience.com
+docs.experience.com
