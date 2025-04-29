@@ -196,6 +196,144 @@
             </div>
         </div>
     </div>
+    
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="card-title mb-0">Score Calculation Explanation</h4>
+                    <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#scoreExplanationCollapse" aria-expanded="false" aria-controls="scoreExplanationCollapse">
+                        <i class="fas fa-chevron-down"></i> Show Details
+                    </button>
+                </div>
+                <div class="collapse" id="scoreExplanationCollapse">
+                    <div class="card-body">
+                        <h5>How Your Score Is Calculated</h5>
+                        <p>The overall security score ({{ data.security_score }}/100) is a weighted average of individual security checks.</p>
+                        
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Category</th>
+                                        <th>Weight</th>
+                                        <th>Score</th>
+                                        <th>Weighted Score</th>
+                                        <th>Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><strong>Security Headers</strong></td>
+                                        <td>15%</td>
+                                        <td>{{ data.full_report.checks.security_headers.score|default(0) }}/100</td>
+                                        <td>{{ (0.15 * data.full_report.checks.security_headers.score|default(0))|round(1) }}</td>
+                                        <td>HTTP security headers like Content-Security-Policy, X-XSS-Protection, etc.</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>DNS Records</strong></td>
+                                        <td>10%</td>
+                                        <td>{{ data.full_report.checks.dns_records.score|default(0) }}/100</td>
+                                        <td>{{ (0.10 * data.full_report.checks.dns_records.score|default(0))|round(1) }}</td>
+                                        <td>Presence and configuration of essential DNS records</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>DNSSEC</strong></td>
+                                        <td>10%</td>
+                                        <td>{{ data.full_report.checks.dnssec.score|default(0) }}/100</td>
+                                        <td>{{ (0.10 * data.full_report.checks.dnssec.score|default(0))|round(1) }}</td>
+                                        <td>Implementation of DNS Security Extensions</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>HTTPS</strong></td>
+                                        <td>20%</td>
+                                        <td>{{ data.full_report.checks.https.score|default(0) }}/100</td>
+                                        <td>{{ (0.20 * data.full_report.checks.https.score|default(0))|round(1) }}</td>
+                                        <td>HTTPS implementation, protocols (TLS), and certificate validity</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>WAF</strong></td>
+                                        <td>10%</td>
+                                        <td>{{ data.full_report.checks.waf.score|default(0) }}/100</td>
+                                        <td>{{ (0.10 * data.full_report.checks.waf.score|default(0))|round(1) }}</td>
+                                        <td>Web Application Firewall detection</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Domain Info</strong></td>
+                                        <td>10%</td>
+                                        <td>{{ data.full_report.checks.domain_info.score|default(0) }}/100</td>
+                                        <td>{{ (0.10 * data.full_report.checks.domain_info.score|default(0))|round(1) }}</td>
+                                        <td>Domain registration, expiration, and privacy protection</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Open Ports</strong></td>
+                                        <td>15%</td>
+                                        <td>{{ data.full_report.checks.open_ports.score|default(0) }}/100</td>
+                                        <td>{{ (0.15 * data.full_report.checks.open_ports.score|default(0))|round(1) }}</td>
+                                        <td>Unnecessary or risky open ports</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Email Security</strong></td>
+                                        <td>10%</td>
+                                        <td>{{ data.full_report.checks.email_security.score|default(0) }}/100</td>
+                                        <td>{{ (0.10 * data.full_report.checks.email_security.score|default(0))|round(1) }}</td>
+                                        <td>SPF, DKIM, DMARC, and MX record configuration</td>
+                                    </tr>
+                                    <tr class="table-primary">
+                                        <td colspan="3"><strong>Total (Weighted Average)</strong></td>
+                                        <td><strong>{{ data.security_score }}/100</strong></td>
+                                        <td><strong>{{ data.security_rank }} Grade</strong></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <h5>Security Rank Criteria</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <ul class="list-group">
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            A+ (Excellent)
+                                            <span class="badge bg-success rounded-pill">95-100</span>
+                                        </li>
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            A (Very Good)
+                                            <span class="badge bg-success rounded-pill">85-94</span>
+                                        </li>
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            B+ (Good)
+                                            <span class="badge bg-primary rounded-pill">75-84</span>
+                                        </li>
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            B (Above Average)
+                                            <span class="badge bg-primary rounded-pill">65-74</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <ul class="list-group">
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            C (Average)
+                                            <span class="badge bg-warning rounded-pill">55-64</span>
+                                        </li>
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            D (Below Average)
+                                            <span class="badge bg-warning rounded-pill">45-54</span>
+                                        </li>
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            E (Poor)
+                                            <span class="badge bg-danger rounded-pill">0-44</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div class="row">
         <div class="col-md-12">
